@@ -42,9 +42,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: 'Install postgresql and set up database'
-      uses: Azure/powershell@v1
-      with: 
-        inlineScript: |
+      shell: pwsh
+      run: |
           $serviceName = Get-Service -Name postgresql*
           Set-Service -InputObject $serviceName -StartupType Automatic
           Start-Service -InputObject $serviceName

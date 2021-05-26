@@ -66,3 +66,72 @@ jobs:
       
     - name: 'Run integration tests'
       run: python -m tox -e py-postgres -- -v -n4
+
+  # These three are all similar except secure environment variables, which MUST be passed along to their tasks,
+  # but there's probably a better way to do this!
+  SnowflakeIntegrationTest:
+    runs-on: 'windows-latest'
+    needs: UnitTest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2.2.2
+        with:
+          python-version: '3.7'
+          architecture: 'x64'
+
+      - name: 'Install dependencies'
+        run: python -m pip install --upgrade pip && pip install tox
+
+      - name: 'Run integration tests'
+        run: python -m tox -e py-snowflake -- -v -n4
+        env:
+          SNOWFLAKE_TEST_ACCOUNT: ${{ secrets.SNOWFLAKE_TEST_ACCOUNT }}
+          SNOWFLAKE_TEST_PASSWORD: ${{ secrets.SNOWFLAKE_TEST_PASSWORD }}
+          SNOWFLAKE_TEST_USER: ${{ secrets.SNOWFLAKE_TEST_USER }}
+          SNOWFLAKE_TEST_WAREHOUSE: ${{ secrets.SNOWFLAKE_TEST_WAREHOUSE }}
+          SNOWFLAKE_TEST_OAUTH_REFRESH_TOKEN: ${{ secrets.SNOWFLAKE_TEST_OAUTH_REFRESH_TOKEN }}
+          SNOWFLAKE_TEST_OAUTH_CLIENT_ID: ${{ secrets.SNOWFLAKE_TEST_OAUTH_CLIENT_ID }}
+          SNOWFLAKE_TEST_OAUTH_CLIENT_SECRET: ${{ secrets.SNOWFLAKE_TEST_OAUTH_CLIENT_SECRET }}
+
+  BigQueryIntegrationTest:
+    runs-on: 'windows-latest'
+    needs: UnitTest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2.2.2
+        with:
+          python-version: '3.7'
+          architecture: 'x64'
+        
+      - name: 'Install dependencies'
+        run: python -m pip install --upgrade pip && pip install tox
+      
+      - name: 'Run integration tests'
+        run: python -m tox -e py-bigquery -- -v -n4
+        env:
+          BIGQUERY_SERVICE_ACCOUNT_JSON: ${{ secrets.BIGQUERY_SERVICE_ACCOUNT_JSON }}
+
+  RedshiftIntegrationTest:
+    runs-on: 'windows-latest'
+    needs: UnitTest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2.2.2
+        with:
+          python-version: '3.7'
+          architecture: 'x64'
+
+      - name: 'Install dependencies'
+        run: python -m pip install --upgrade pip && pip install tox
+
+      - name: 'Run integration tests' 
+        run: python -m tox -e py-redshift -- -v -n4
+        env:
+          REDSHIFT_TEST_DBNAME: ${{ secrets.REDSHIFT_TEST_DBNAME }}
+          REDSHIFT_TEST_PASS: ${{ secrets.REDSHIFT_TEST_PASS }}
+          REDSHIFT_TEST_USER: ${{ secrets.REDSHIFT_TEST_USER }}
+          REDSHIFT_TEST_PORT: ${{ secrets.REDSHIFT_TEST_PORT }}
+          REDSHIFT_TEST_HOST: ${{ secrets.REDSHIFT_TEST_HOST }}

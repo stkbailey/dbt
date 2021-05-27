@@ -21,7 +21,10 @@ on:
 
 jobs:
   UnitTest:
-    runs-on: 'windows-latest'
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v2
     - name: Setup Python
@@ -37,7 +40,10 @@ jobs:
       run: python -m tox -e py -- -v
       
   PostgresIntegrationTest:
-    runs-on: 'windows-latest'
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     needs: UnitTest
     steps:
     - uses: actions/checkout@v2
@@ -70,7 +76,10 @@ jobs:
   # These three are all similar except secure environment variables, which MUST be passed along to their tasks,
   # but there's probably a better way to do this!
   SnowflakeIntegrationTest:
-    runs-on: 'windows-latest'
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     environment: 'Snowflake'
     needs: UnitTest
     steps:
@@ -101,7 +110,10 @@ jobs:
           SNOWFLAKE_TEST_ROLE: ${{ secrets.SNOWFLAKE_TEST_ROLE }}
 
   BigQueryIntegrationTest:
-    runs-on: 'windows-latest'
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     environment: 'Bigquery'
     needs: UnitTest
     steps:
@@ -122,7 +134,10 @@ jobs:
           BIGQUERY_TEST_ALT_DATABASE: ${{ secrets.BIGQUERY_TEST_ALT_DATABASE }}
 
   RedshiftIntegrationTest:
-    runs-on: 'windows-latest'
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     environment: 'Redshift'
     needs: UnitTest
     steps:

@@ -12,18 +12,21 @@ import dbt.tracking
 import dbt.flags as flags
 
 from dbt.adapters.factory import (
+    get_adapter,
     get_relation_class_by_name,
     get_adapter_package_names,
 )
 from dbt.helper_types import PathSet
 from dbt.logger import GLOBAL_LOGGER as logger, DbtProcessState
 from dbt.node_types import NodeType
-from dbt.clients.jinja import get_rendered, statically_extract_macro_calls
+from dbt.clients.jinja import get_rendered, MacroStack
+from dbt.clients.jinja_static import statically_extract_macro_calls
 from dbt.clients.system import make_directory
 from dbt.config import Project, RuntimeConfig
-from dbt.context.base import generate_base_context
 from dbt.context.docs import generate_runtime_docs
-from dbt.context.macro_resolver import MacroResolver
+from dbt.context.macro_resolver import MacroResolver, TestMacroNamespace
+from dbt.context.configured import generate_macro_context
+from dbt.context.providers import ParseProvider
 from dbt.contracts.files import FilePath, FileHash
 from dbt.contracts.graph.compiled import ManifestNode
 from dbt.contracts.graph.manifest import (
@@ -262,18 +265,26 @@ class ManifestLoader:
 
     # Loop through macros in the manifest and statically parse
     # the 'macro_sql' to find depends_on.macros
-    def reparse_macros(self, macro_manifest):
+    def reparse_macros(self, macros):
         internal_package_names = get_adapter_package_names(
             self.root_project.credentials.type
         )
         macro_resolver = MacroResolver(
-            macro_manifest.macros,
+            macros,
             self.root_project.project_name,
             internal_package_names
         )
-        base_ctx = generate_base_context({})
-        for macro in macro_manifest.macros.values():
-            possible_macro_calls = statically_extract_macro_calls(macro.macro_sql, base_ctx)
+        macro_ctx = generate_macro_context(self.root_project)
+        macro_namespace = TestMacroNamespace(
+            macro_resolver, {}, None, MacroStack(), []
+        )
+        adapter = get_adapter(self.root_project)
+        db_wrapper = ParseProvider().DatabaseWrapper(
+            adapter, macro_namespace
+        )
+        for macro in macros.values():
+            possible_macro_calls = statically_extract_macro_calls(
+                macro.macro_sql, macro_ctx, db_wrapper)
             for macro_name in possible_macro_calls:
                 # adapter.dispatch calls can generate a call with the same name as the macro
                 # it ought to be an adapter prefix (postgres_) or default_
@@ -300,8 +311,6 @@ class ManifestLoader:
             files=self.results.files
         )
 
-        self.reparse_macros(macro_manifest)
-
         self.macro_hook(macro_manifest)
         return macro_manifest
 
@@ -314,6 +323,7 @@ class ManifestLoader:
         # store the macros & files from the adapter macro manifest
         self.results.macros.update(macro_manifest.macros)
         self.results.files.update(macro_manifest.files)
+        self.reparse_macros(self.results.macros)
 
         start_timer = time.perf_counter()
 

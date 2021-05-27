@@ -2,6 +2,7 @@
 
 ### Fixes
 - Fix references to macros with package names when rendering schema tests ([#3324](https://github.com/fishtown-analytics/dbt/issues/3324), [#3345](https://github.com/fishtown-analytics/dbt/pull/3345))
+- Fix adapter.dispatch macro resolution when statically extracting macros. Introduce new project-level `dispatch` config ([#3362](https://github.com/fishtown-analytics/dbt/issues/3362), [#3363](https://github.com/fishtown-analytics/dbt/pull/3363), [#3383](https://github.com/fishtown-analytics/dbt/pull/3383))
 
 ## dbt 0.19.2rc1 (April 28, 2021)
 

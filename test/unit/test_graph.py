@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from dbt.adapters.postgres import Plugin as PostgresPlugin
-from dbt.adapters.factory import reset_adapters
+from dbt.adapters.factory import reset_adapters, register_adapter
 import dbt.clients.system
 import dbt.compilation
 import dbt.exceptions
@@ -129,7 +129,6 @@ class GraphTest(unittest.TestCase):
         self.mock_filesystem_constructor.side_effect = create_filesystem_searcher
         self.mock_hook_constructor = self.hook_patcher.start()
         self.mock_hook_constructor.side_effect = create_hook_patcher
-        inject_plugin(PostgresPlugin)
 
     def get_config(self, extra_cfg=None):
         if extra_cfg is None:
@@ -161,6 +160,8 @@ class GraphTest(unittest.TestCase):
             self.mock_models.append(source_file)
 
     def load_manifest(self, config):
+        inject_plugin(PostgresPlugin)
+        register_adapter(config)
         loader = dbt.parser.manifest.ManifestLoader(config, {config.project_name: config})
         loader.load(macro_manifest=self.macro_manifest)
         return loader.create_manifest()
@@ -319,6 +320,8 @@ class GraphTest(unittest.TestCase):
     def test__partial_parse(self):
         config = self.get_config()
 
+        inject_plugin(PostgresPlugin)
+        register_adapter(config)
         loader = dbt.parser.manifest.ManifestLoader(config, {config.project_name: config})
         loader.load(macro_manifest=self.macro_manifest)
         loader.create_manifest()

@@ -38,8 +38,42 @@ jobs:
     - name: 'Run unit tests'
       run: python -m tox -e py -- -v
       
-  PostgresIntegrationTest:
+  PostgresIntegrationTest-Windows:
     runs-on: 'windows-latest'
+    needs: UnitTest
+    steps:
+    - uses: actions/checkout@v2
+    - name: 'Install postgresql and set up database'
+      shell: pwsh
+      run: |
+          $serviceName = Get-Service -Name postgresql*
+          Set-Service -InputObject $serviceName -StartupType Automatic
+          Start-Service -InputObject $serviceName
+          & $env:PGBIN\createdb.exe -U postgres dbt
+          & $env:PGBIN\psql.exe  -U postgres -c "CREATE ROLE root WITH PASSWORD 'password';"
+          & $env:PGBIN\psql.exe  -U postgres -c "ALTER ROLE root WITH LOGIN;"
+          & $env:PGBIN\psql.exe  -U postgres -c "GRANT CREATE, CONNECT ON DATABASE dbt TO root WITH GRANT OPTION;"
+          & $env:PGBIN\psql.exe  -U postgres -c "CREATE ROLE noaccess WITH PASSWORD 'password' NOSUPERUSER;"
+          & $env:PGBIN\psql.exe  -U postgres -c "ALTER ROLE noaccess WITH LOGIN;"
+          & $env:PGBIN\psql.exe  -U postgres -c "GRANT CONNECT ON DATABASE dbt TO noaccess;"
+      
+    - name: Setup Python
+      uses: actions/setup-python@v2.2.2
+      with:
+        python-version: '3.7'
+        architecture: 'x64'
+        
+    - name: 'Install dependencies'
+      run: python -m pip install --upgrade pip && pip install tox
+      
+    - name: 'Run integration tests'
+      run: python -m tox -e py-postgres -- -v -n4
+      
+  PostgresIntegrationTest-NonWindows:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     needs: UnitTest
     steps:
     - uses: actions/checkout@v2
@@ -61,7 +95,11 @@ jobs:
   # These three are all similar except secure environment variables, which MUST be passed along to their tasks,
   # but there's probably a better way to do this!
   SnowflakeIntegrationTest:
-    runs-on: 'windows-latest'
+    strategy:
+      max-parallel: 1
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     environment: 'Snowflake'
     needs: UnitTest
     steps:
@@ -92,7 +130,11 @@ jobs:
           SNOWFLAKE_TEST_ROLE: ${{ secrets.SNOWFLAKE_TEST_ROLE }}
 
   BigQueryIntegrationTest:
-    runs-on: 'windows-latest'
+    strategy:
+      max-parallel: 1
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     environment: 'Bigquery'
     needs: UnitTest
     steps:
@@ -113,7 +155,11 @@ jobs:
           BIGQUERY_TEST_ALT_DATABASE: ${{ secrets.BIGQUERY_TEST_ALT_DATABASE }}
 
   RedshiftIntegrationTest:
-    runs-on: 'windows-latest'
+    strategy:
+      max-parallel: 1
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     environment: 'Redshift'
     needs: UnitTest
     steps:

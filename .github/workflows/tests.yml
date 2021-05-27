@@ -71,6 +71,7 @@ jobs:
   # but there's probably a better way to do this!
   SnowflakeIntegrationTest:
     runs-on: 'windows-latest'
+    environment: 'Snowflake'
     needs: UnitTest
     steps:
       - uses: actions/checkout@v2
@@ -96,6 +97,7 @@ jobs:
 
   BigQueryIntegrationTest:
     runs-on: 'windows-latest'
+    environment: 'Bigquery'
     needs: UnitTest
     steps:
       - uses: actions/checkout@v2
@@ -115,6 +117,7 @@ jobs:
 
   RedshiftIntegrationTest:
     runs-on: 'windows-latest'
+    environment: 'Redshift'
     needs: UnitTest
     steps:
       - uses: actions/checkout@v2

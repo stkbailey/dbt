@@ -1,6 +1,6 @@
 # This is a workflow to run our unit and integration tests for windows and mac
 
-name: Integration Tests
+name: dbt Tests
 
 # Triggers
 on:
@@ -40,6 +40,7 @@ jobs:
       
   PostgresIntegrationTest:
     runs-on: 'windows-latest' #TODO: Add Mac support
+    environment: 'Postgres'
     needs: UnitTest
     steps:
     - uses: actions/checkout@v2
@@ -73,7 +74,6 @@ jobs:
   # but there's probably a better way to do this!
   SnowflakeIntegrationTest:
     strategy:
-      max-parallel: 1
       matrix:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
@@ -108,7 +108,6 @@ jobs:
 
   BigQueryIntegrationTest:
     strategy:
-      max-parallel: 1
       matrix:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
@@ -133,7 +132,6 @@ jobs:
 
   RedshiftIntegrationTest:
     strategy:
-      max-parallel: 1
       matrix:
         os: [windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}

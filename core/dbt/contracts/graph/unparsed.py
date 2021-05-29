@@ -413,5 +413,7 @@ class UnparsedExposure(dbtClassMixin, Replaceable):
     owner: ExposureOwner
     description: str = ''
     maturity: Optional[MaturityType] = None
+    meta: Optional[Dict[str, Any]] = None
+    tags: Optional[List[str]] = None
     url: Optional[str] = None
     depends_on: List[str] = field(default_factory=list)

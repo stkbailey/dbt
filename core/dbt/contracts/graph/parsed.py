@@ -686,8 +686,8 @@ class ParsedExposure(UnparsedBaseNode, HasUniqueID, HasFqn):
     owner: ExposureOwner
     resource_type: NodeType = NodeType.Exposure
     description: str = ''
-    meta: Dict[str, Any] = field(default_factory=dict)
     maturity: Optional[MaturityType] = None
+    meta: Dict[str, Any] = field(default_factory=dict)
     tags: List[str] = field(default_factory=list)
     url: Optional[str] = None
     depends_on: DependsOn = field(default_factory=DependsOn)
